@@ -13,5 +13,49 @@
 3、概要设计
 
 数据结构设计：
+
 参赛队伍的数据结构：结构体--Team 用于存储参赛队的基本信息（包含参赛队编号，参赛作品名称，参赛学校，赛事类别，参赛者，指导老师）
+struct Team         //参赛队伍
+{
+	int id_team;        //队伍编号
+	string name_creation; //作品名称
+	string school;      //参赛学校
+	string category;   //参赛类别
+	string competitor; //参赛者
+	string tutor;      //指导老师
+  Team* left;        //左指针
+	Team* right;       //右指针
+};
+
+所有的参赛队伍通过一个二叉排序树存储起来
+Team *root;
+指向根节点。
+
+从txt录入的信息存入二维容器：
+vector<vector<string>>data;
+
+定义一个System类
+class System {          //赛事系统
+
+通过创建一个Manage_information的单例对象为它的成员实现信息管理功能的使用
+private:
+        	Manage_informatiom manager;
+          
+使用init()方法实现从txt读入数据将其用二叉排序树存储起来
+void init();           //读取文件存入容器
+
+使用bitree（）实现二叉树的建立
+void bitree();         //建立排序二叉树
+
+定义一个信息管理类Manage_information ,
+class Manage_informatiom 
+
+定义一系列功能函数
+	void find(); //根据编号查找
+	void del();  //删除
+	void add();  //添加
+  void change();  //修改
+  
+
+
 
