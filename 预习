@@ -79,7 +79,11 @@ int num_team(Team* r);
 //二叉排序树中序后继代替
 void nextDel(Team *p);
 //将更新后的信息写回txt
-void write(Team *root);                         
+void write(Team *root);
+//递归归并排序赛事类别
+void MergeSort(Team* p[], Team* q[],int left,int right);
+//相邻两个归并段合成一个
+void Merge(Team* p[], Team* q[],int s,int m,int t);                              
 
 
 
