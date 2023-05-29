@@ -1,14 +1,20 @@
 1、问题定义
 
-管理各队参赛信息
+管理和查找各队参赛信息
 
 2、问题分析
 
 能够管理各参赛队的基本信息（包含参赛队编号，参赛作品名称，参赛学校，赛事类别，参赛者，指导老师），
 赛事类别共11项（参见大赛官网jsjds.blcu.edu.cn）；包括增加、删除、修改参赛队伍的信息。
+
 从team.txt中读取参赛队伍的基本信息，实现基于二叉排序树的查找。
+
 根据提示输入参赛队编号，若查找成功，输出该赛事类别对应的基本信息（参赛作品名称、参赛学校、赛事类别、参赛者和指导老师信息），
 同时，输出查找成功时的平均查找长度ASL；否则，输出“查找失败！”。
+
+能够提供按参赛学校查询参赛团队（或根据赛事类别查询参赛团队），即，根据提示输入参赛学校名称（赛事类别），
+若查找成功，输出该学校参赛的（该赛事类别的）所有团队的基本信息，输出的参赛团队按赛事类别有序输出。
+（排序算法可从选择排序、插入排序、希尔排序、归并排序、堆排序中任意选择，并为选择算法的原因做出说明。）
 
 3、概要设计
 
@@ -58,30 +64,43 @@ class Manage_informatiom
 
  //比较编号大小
 bool cmp(string x1, string x2); 
-//基于id的查找
+
+使用search_id函数实现基于id的查找
 Team* search_id(Team *r,string id);  
-//基于学校的查找
+
+使用search_school函数实现基于学校的查找，并输出按赛事类别排序的结果
 void search_school(Team* r, string school);
-//删除一个队伍
+
+使用del函数实现在二叉树中删除一个队伍
 void del(Team* r, string id); 
-//插入一个队伍
+
+使用add函数实现插入一个新的队伍
 Team* add(Team *root,Team *s);  
-//修改一个队伍的信息
+
+使用change函数实现修改一个队伍的信息
 void change(Team *root,string id);  
-//展示一个队伍的信息
-void show_information(Team* r, string id); 
+
+使用show_information函数查找一个队伍并展示基本信息
+void show_information(Team* r, string id);
+
 //中序展示二叉树所有队伍信息
-void show_allteam(Team* r);     
- //总查找长度
-int SL(Team* r, int len);   
-//计算队伍总数
+void show_allteam(Team* r);
+
+使用SL函数实现总查找长度的计算
+int SL(Team* r, int len); 
+
+使用num_team函数实现计算队伍总数
 int num_team(Team* r);	
+
 //二叉排序树中序后继代替
 void nextDel(Team *p);
-//将更新后的信息写回txt
+
+使用一个write函数将更新后的信息写回txt，每次退出信息管理系统时写入一次
 void write(Team *root);
+
 //递归归并排序赛事类别
 void MergeSort(Team* p[], Team* q[],int left,int right);
+
 //相邻两个归并段合成一个
 void Merge(Team* p[], Team* q[],int s,int m,int t);                              
 
