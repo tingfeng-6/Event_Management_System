@@ -12,10 +12,7 @@
 
 数据结构设计：
 
-使用一个二维容器储存决赛室和等待队伍.行号+1是教室号，列即是等待队伍
-vector<vector<int>> waiting；
-
-使用一个哈希表将教室号与就绪队伍对应，每个就绪队伍使用一个容器来存储
+使用一个哈希表来储存教室号与就绪队伍，每个就绪队伍使用一个容器来存储
 unordered_map<int, vector<int>> hmap;
 vector<int> waiting1；
 vector<int> waiting2;
@@ -24,6 +21,23 @@ vector<int> waiting2;
 函数对应：
 
 使用getNum_Room来得到此类别的比赛将于哪个房间展开
-getNum_Room(string category);
+getNum_Room(string category){
+一一比对赛事小类的名字，将其归为大类
+}
+
+使用divide（）将所有的队伍按赛事类别进行分组
+divide(Team* r){
+递归所有参赛队伍
+将其id加入就绪队列
+hmap[getNum_Room(r.category)].push_back(r.id);
+}
+
+使用call模拟叫号
+call(Team* r)
+{
+for i从队首到队尾
+  for j 从1到9号赛场
+  输出比赛队伍和候场队伍
+}
 
 
