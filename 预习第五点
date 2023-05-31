@@ -9,7 +9,62 @@
 
 观察得此为一个图论问题，目标为求图内两点的距离最小值的路（即最小权值路径）
 根据数据结构课程所学知识，有多种经典算法可以解决最短路径问题，，包括 Dijkstra算法，Floyd-Warshell 算法，Bellman-Ford 算法和深度优先遍历。
-不同是算法有不同的算法复杂度，考虑到校园中道路没有负权边，以上算法均可解决最短路径问题。
+不同是算法有不同的算法复杂度，考虑到校园中道路没有负权边，以上算法均可解决最短路径问题。我采用的是Floyd算法。
 
 3、概要设计
+
+数据结构设计：
+
+使用一个Building结构体来存储建筑物（目的地）的基本信息
+struct Building
+{
+	//代号
+	int id;
+	//建筑名称
+	string name;
+	//建筑物介绍
+	string introduction;
+};
+
+建一个Guide类
+
+class Guide {
+private:
+	//顶点数组（目的地）
+	Building vertex[12];
+	//邻接矩阵
+	int adj[12][12];
+	int num_vertex = 12;
+	int num_edge;
+public:
+	//求两点间最短路径
+	void Floyd(int a[][12], int A[][12], int P[][12], int n);
+};
+
+使用Floyd算法求两点间最短路径
+void Floyd(int a[][12], int A[][12], int P[][12], int n){
+	int i, j, k;
+	//初始化最短路径长度数组A[][] 和前驱数组P[][]
+	for(i=0;i<n;i++)
+		for (j = 0; j < n; j++) {
+			//初始A[][]与邻接矩阵相同
+			A[i][j] = a[i][j];
+			//如果i和j可达且i，j不是同一点，初始时i即是i到j路径的前驱
+			if (A[i][j] != 9999 && A[i][j] != 0) P[i][j] = i;
+			else P[i][j] = -1;
+		}
+	for (i = 0; i < n; i++) P[i][i] = -1;
+	//中间结点k从0到n-1
+	for (int k = 0; k < n; k++) {
+		//初始结点i从0到n-1
+		for(i=0;i<n;i++)
+			//目标结点j从0到n-1
+			for(j=0;j<n;j++)
+				if (A[i][k] + A[k][j] < A[i][j]) {
+					A[i][j] = A[i][k] + A[k][j];
+					P[i][j] = P[k][j];
+				}
+	}
+}
+
 
