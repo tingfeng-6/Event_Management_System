@@ -1,0 +1,655 @@
+#include<iostream>
+#include <sstream>
+#include <fstream>
+#include <vector>
+#include<unordered_map>
+#include< iomanip >
+#include <Windows.h>
+#include<stdio.h>
+#include<graphics.h>
+using namespace std;
+#define MAX 9999
+
+struct Team         //参赛队伍
+{
+	string id_team;        //队伍编号
+	string name_creation; //作品名称
+	string school;      //参赛学校
+	string category;   //参赛类别
+	string competitor; //参赛者
+	string tutor;      //指导老师
+	Team* left=NULL;        //左指针
+	Team* right=NULL;       //右指针
+};
+
+//信息管理系统
+class Manage_informatiom {    
+public:
+	Team* team_same_school[500]={};
+	int num_same_school = 0;
+	bool cmp(string x1, string x2);  //比较编号大小
+	Team* search_id(Team *r,string id);  //基于id的查找
+	void search_school(Team* r, string school);//基于学校的查找
+	void del(Team* r, string id);  //删除
+	Team* add(Team *root,Team *s); //插入  
+	void change(Team *root,string id);    //修改
+	void show_information(Team* r, string id);       //信息展示
+	void show_allteam(Team* r);                      //中序展示二叉树所有队伍信息
+	int SL(Team* r, int len);                        //总查找长度
+	int num_team(Team* r);							 //队伍总数
+	void nextDel(Team *p);									 //二叉排序树中序后继代替
+	void write(Team *root);                         //将更新后的信息写回txt
+	void MergeSort(Team* p[], Team* q[],int left,int right);                               //递归归并排序赛事类别
+	void Merge(Team* p[], Team* q[],int s,int m,int t);                             //相邻两个归并段合成一个 
+};
+void Manage_informatiom::nextDel(Team *p) {
+	Team* q = p;
+	Team* s = p->right;
+	while (s->left != NULL) {        //查找最左下结点
+		q = s;
+		s = s->left;
+	}
+	//用s取代p
+	p->id_team = s->id_team;
+	p->category = s->category;
+	p->competitor = s->competitor;
+	p->name_creation = s->name_creation;
+	p->school = s->school;
+	p->tutor = s->tutor;
+	if (q == p)
+		q->right = s->right;
+	else
+		q->left = s->right;
+	delete s;
+}
+bool Manage_informatiom::cmp(string x1, string x2) {  //true 为x1大于x2
+	if (x1.length() != x2.length()) return x1.length() > x2.length();
+	else return x1 > x2;
+}
+Team* Manage_informatiom::search_id(Team* r,string id) {
+	if (r) {
+		if (r->id_team == id)
+			return r;
+		if(cmp(r->id_team,id))
+			 return search_id(r->left, id);
+		else
+			 return search_id(r->right, id);
+		}
+	else
+		return NULL;
+}
+void Manage_informatiom::search_school(Team*r,string school){
+	if (r) {
+		search_school(r->left, school);
+		//将同一个学校的队伍存入容器
+		if (r->school == school)
+			team_same_school[num_same_school++] = r;
+		search_school(r->right, school);
+	}
+}
+void Manage_informatiom::del(Team* r, string id){
+	Team* p= NULL;    //指向要删除的结点
+	Team* f = NULL;   //指向要删除结点的父节点
+	while (r) {
+		if (r->id_team == id)
+			p = r;
+		else
+			f = r;
+		if (cmp(r->id_team, id)) {
+			r = r->left;
+		}
+		else
+			r=r->right;
+	}
+
+	if (p == NULL)
+	{
+		cout << "没有此队伍" << '\n' << endl;
+		return;
+	}
+	//左孩子
+	if (p == f->left)
+		if (!p->left && !p->right)           //p为叶子结点
+		{
+			f->left = NULL;
+			delete p;
+		}
+		else if (!p->right) { f->left = p->left; delete p; }       //p只有左子树
+		else if (!p->left) { f->left = p->right; delete p; }       //p只有右子树
+		else nextDel(p);          //左右都不空
+	//右孩子
+	else
+		if (!p->left && !p->right) { f->right = NULL; delete p; }
+		else if (!p->right) { f->right = p->left; delete p; }//p只有左子树
+		else if (!p->left) { f->right = p->right; delete p; }//p只有右子树
+		else nextDel(p);              //左右都不空
+
+	//cout << p->id_team << " " << f->id_team << endl;
+
+}
+Team* Manage_informatiom::add(Team* root, Team* s) {
+	if (root == NULL) return s;
+	else {
+		if (s->id_team == root->id_team)
+			cout << "已有此队伍" <<'\n' << endl;
+		else
+		{
+			if (cmp(s->id_team, root->id_team))
+				root->right = add(root->right, s);  //插入右子树
+			else
+				root->left = add(root->left, s);    //插入左子树
+		}
+	}
+	return root;
+}
+void Manage_informatiom::change(Team* root, string id){
+	Team* p = search_id(root, id);   //找到要修改的队伍
+	if (!p) { cout << "队伍不存在" <<'\n' << endl; return; }
+	cout << endl;
+	int flag = true;
+	while (flag) {
+		int select;
+		cout << "请选择您要修改的信息（1、参赛作品名称  2、参赛学校  3、赛事类别	4、参赛者  5、指导教师  88、退出修改）：" << endl;
+		cin >> select;
+		switch (select) {
+		case 1:
+			cout << "请输入新的参赛作品名称(请不要有空格)：" << endl;
+			cin >> p->name_creation;
+			break;
+		case 2:
+			cout << "请输入新的参赛学校(请不要有空格)：" << endl;
+			cin >> p->school;
+			break;
+		case 3:
+			cout << "请输入新的赛事类别(请不要有空格)：" << endl;
+			cin >> p->category;
+			break;
+		case 4:
+			cout << "请输入新的参赛者(请不要有空格)：" << endl;
+			cin >> p->competitor;
+			break;
+		case 5:
+			cout << "请输入新的指导教师(请不要有空格)：" << endl;
+			cin >> p->tutor;
+			break;
+		case 88:
+			flag = false;
+			cout << "已退出修改" << endl;
+			break;
+		default:
+			cout << "无效输入" << endl;
+		}
+	}
+}
+void Manage_informatiom::show_information(Team* r, string id) {
+	Team* p = search_id(r, id);
+	if (p) {
+		cout << "ASL:" << endl;
+		cout << "(0";
+		int sl = SL(r, 0);
+		cout << ")/" << num_team(r) << "=" << double(sl) / num_team(r) << endl;
+		cout << '\n' << "基本信息：" << '\n' << "名称：" << p->name_creation << "  " << "学校：" << p->school << "  " << "类别：" << p->category << "  " << " 参赛者：" << p->competitor << "  " << "导师：" << p->tutor << endl;
+	}
+	else
+		cout << "查找失败" << endl;
+}
+void Manage_informatiom::show_allteam(Team* r) {
+	if (r) {
+		show_allteam(r->left);
+		cout << r->id_team << " ";
+		show_allteam(r->right);
+	}
+}
+int Manage_informatiom::SL(Team* r, int len) {       //递归计算所有结点的查找长度和
+	len++;                //每调用一次len++（层数加一）
+	int a = len;
+	cout << "+" << len;
+	if (r->left)          //左子树为空，不再向左
+	{
+		//cout << "+" << len;
+		len += SL(r->left, a);
+	}
+	if (r->right)          //同上
+	{
+		//cout << "+" << len;
+		len += SL(r->right, a);
+	}
+	return len;
+}
+int Manage_informatiom::num_team(Team* r) {
+	int num = 0;
+	if(r)
+	num = 1 + num_team(r->left) + num_team(r->right);
+	return num;
+}
+void Manage_informatiom::write(Team* root) {
+
+	ofstream outfile;
+	outfile.open("C:/Users/殒hu/Desktop/数据结构课设/updateteam.txt");
+	Team* s[1000]={};          //指针数组，做栈
+	int top = 0;
+	while (root != NULL || top != 0) {
+		while (root != NULL) {
+			outfile << root->id_team << " " << root->name_creation << " " << root->school << " " << root->category << " " << root->competitor << " " << root->tutor << '\n'; //输入信息
+			s[top++] = root; root = root->left;   //向左
+		}
+		if (top != 0) { root = s[--top]; root = root->right; }           //
+	}
+}
+void Manage_informatiom::MergeSort(Team* p[], Team* q[], int left, int right) {
+	if (left < right) {
+		int mid = (left + right) / 2;
+		MergeSort(p, q, left, mid);          //给左边排序
+		MergeSort(p, q, mid + 1, right);       //给右边排序
+		Merge(p, q, left, mid, right);
+		for (int j = left; j <= right; j++) p[j] = q[j];
+	}
+}
+void Manage_informatiom::Merge(Team* p[], Team* q[], int s, int m, int t) {
+	//将p[s,m]与p[m+1,t]合并
+	int i = s;      //左边
+	int j = m + 1;   //右边
+	int k = s;
+	while (i <= m && j <= t){
+		if (cmp(p[i]->category, p[j]->category))
+			q[k++] = p[j++];
+		else q[k++] = p[i++];
+	}
+	while (i <= m) q[k++] = p[i++];
+	while (j <= t)q[k++] = p[j++];
+}
+
+//叫号系统
+class Call_System {
+public:
+	//9个队伍
+	vector<string> waiting1;
+	vector<string> waiting2;
+	vector<string> waiting3;
+	vector<string> waiting4;
+	vector<string> waiting5;
+	vector<string> waiting6;
+	vector<string> waiting7;
+	vector<string> waiting8;
+	vector<string> waiting9;
+	//哈希表存储房间和队伍的对应关系
+	unordered_map<int, vector<string>> hmap{{1,waiting1},{2,waiting2},{3,waiting3},{4,waiting4},{5,waiting5},{6,waiting6},{7,waiting7},{8,waiting8},{9,waiting9}};
+	int getNum_Room(string category);     //每个赛事的房间号
+	void call(Team* r);                   //叫号
+	void divide(Team* r);                 //将赛事分组
+};
+int Call_System::getNum_Room(string category) {
+	//1号房间为信息可视化设计
+	if (category == "信息图形设计" || category == "动态信息影像（MG动画）" || category == "交互信息设计" || category == "数据可视化")
+		return 1;
+	//2号房间为数媒静态设计
+	else if (category == "平面设计" || category == "环境设计" || category == "产品设计")
+		return 2;
+	//3号房间为数媒动画与短片
+	else if (category == "微电影" || category == "数字短片" || category == "纪录片" || category == "动画" || category == "新媒体漫画")
+		return 3;
+	//4 数媒游戏与交互设计
+	else if (category == "游戏设计" || category == "交互媒体设计" || category == "虚拟现实VR与增强现实AR")
+		return 4;
+	//5 软件应用与开发
+	else if (category == "Web应用与开发" || category == "管理信息系统" || category == "移动应用开发" || category == "算法设计与应用" || category == "移动应用开发（非游戏类）")
+		return 5;
+	//6 微课与教学辅助
+	else if (category == "计算机基础与应用类课程微课" || category == "中、小学数学或自然科学课程微课" || category == "汉语言文学" || category == "虚拟实验平台")
+		return 6;
+	//7 物联网应用
+	else if (category == "城市管理" || category == "医药卫生" || category == "运动健身" || category == "数字生活" || category == "行业应用" || category == "物联网专项赛")
+		return 7;
+	//8 大数据应用
+	else if (category == "大数据实践" || category == "大数据主题")
+		return 8;
+	//9 人工智能应用
+	else if (category == "人工智能实践赛" || category == "人工智能挑战赛")
+		return 9;
+	else return 0;
+}
+void Call_System::divide(Team* r) {
+	if (r) {
+		hmap[getNum_Room(r->category)].push_back(r->id_team);
+		divide(r->left);
+		divide(r->right);
+	}
+}
+void Call_System::call(Team* r) {
+	divide(r);        //分组
+	int max = 0;
+	for (int i = 1; i <= hmap.size(); i++)       //求出9个类别队伍的最大值
+		if (hmap[i].size() > max)
+			max = hmap[i].size();
+	for (int i = 0; i < max; i++) {  //列号
+		for (int j = 1; j <=hmap.size(); j++) {  //行号，即教室号
+			if (i < hmap[j].size() - 1)            //倒数第二个队伍入场
+			{
+				cout << hmap[j][i] << "进入" << j << "号比赛室" << '\t' << hmap[j][i + 1] << "候场  "; 
+			}
+			else if (i == hmap[j].size() - 1)
+			{
+				cout << hmap[j][i] << "进入" << j << "号比赛室" << '\t' << j << "号比赛室比赛结束" << endl; 
+			}
+			else continue;
+			if (j  % 3 == 0) cout << endl;
+		}
+		cout << endl;
+		Sleep(500);
+	}
+	cout << "比赛结束" << endl;
+	//cout << count;
+}
+
+struct Building
+{
+	//代号
+	int id;
+	//建筑名称
+	string name;
+	//建筑物介绍
+	string introduction;
+};
+
+//导游系统
+class Guide {
+private:
+	//顶点数组（目的地）
+	Building vertex[12] = {
+		{1,"3号组团","学生公寓3号组团，由A，B，C，D，L楼组成"},
+		{2,"西苑食堂","食堂，共有三楼，可供同学们干饭"},
+		{3,"文体中心","体育馆，内有乒乓球场，羽毛球场，台球桌，篮球场，武术馆，舞蹈室"},
+		{4,"明德楼","江科大一重要的教学楼，供同学们上课和自习"},
+		{5,"文理大楼","江科大最重要的地标，全校最高的楼，同时也是科技感最强的建筑，内有实验室和教室"},
+		{6,"东操场","平平无奇一操场，旁边有单杠等健身器材，附件配有网球场"},
+		{7,"图书馆","和其他大学的图书馆一样，此图书馆中看书的人少之又少，充满了好学的同学，每天晚上都灯火通明"},
+		{8,"计算机学院楼","五层的现代建筑，计算机学院大本营"},
+		{9,"国际学院楼","留学生门的住所，全是歪果仁"},
+		{10,"北苑食堂","外包食堂，有烧烤，火锅等众多美食可供学生，教师们选择"},
+		{11,"重装实验楼","见名知意，此楼作用是组装重型器件"},
+		{12,"行政大楼","此楼处理的大部分是校级的事务"},
+	};
+	//邻接矩阵
+	int num_edge=19;
+	int num_vertex = 12;
+	int adj[12][12] = { 
+		{0,280,550,MAX,MAX,MAX,MAX,MAX,MAX,MAX,MAX,MAX},
+		{280,0,490,440,MAX,MAX,MAX,MAX,MAX,MAX,MAX,MAX},
+		{550,490,0,370,MAX,560,MAX,MAX,MAX,MAX,MAX,MAX},
+		{MAX,440,370,0,320,850,MAX,MAX,MAX,MAX,MAX,MAX},
+		{MAX,MAX,MAX,320,0,580,300,220,MAX,MAX,MAX,MAX},
+		{MAX,MAX,560,850,580,0,430,MAX,440,MAX,MAX,MAX},
+		{MAX,MAX,MAX,MAX,300,430,0,320,270,1130,MAX,MAX},
+		{MAX,MAX,MAX,MAX,220,MAX,320,0,MAX,MAX,460,MAX},
+		{MAX,MAX,MAX,MAX,MAX,440,270,MAX,0,1280,MAX,MAX},
+		{MAX,MAX,MAX,MAX,MAX,MAX,1130,MAX,1280,0,MAX,210},
+		{MAX,MAX,MAX,MAX,MAX,MAX,MAX,460,MAX,MAX,0,350},
+		{MAX,MAX,MAX,MAX,MAX,MAX,MAX,MAX,MAX,210,350,0}
+	};
+	int A[12][12] = {};
+	int P[12][12] = {};
+public:
+	//求两点间最短路径
+	void Floyd(int a[][12], int A[][12], int P[][12], int n);
+	void guidance();
+	Guide() {
+		Floyd(adj, A, P, num_vertex);
+	}
+};
+void Guide::Floyd(int a[][12], int A[][12], int P[][12], int n) {
+	int i, j, k;
+	//初始化最短路径长度数组A[][] 和前驱数组P[][]
+	for(i=0;i<n;i++)
+		for (j = 0; j < n; j++) {
+			//初始A[][]与邻接矩阵相同
+			A[i][j] = a[i][j];
+			//如果i和j可达且i，j不是同一点，初始时i即是i到j路径的前驱
+			if (A[i][j] != 9999 && A[i][j] != 0) P[i][j] = i+1;
+			else P[i][j] = -1;
+		}
+	for (i = 0; i < n; i++) P[i][i] = -1;
+	//中间结点k从0到n-1
+	for (int k = 0; k < n; k++) {
+		//初始结点i从0到n-1
+		for(i=0;i<n;i++)
+			//目标结点j从0到n-1
+			for(j=0;j<n;j++)
+				if (A[i][k] + A[k][j] < A[i][j]) {
+					A[i][j] = A[i][k] + A[k][j];
+					P[i][j] = P[k][j];
+				}
+	}
+}
+void Guide::guidance() {
+	//展示一个导游图
+	initgraph(1200, 705, SHOWCONSOLE);
+	setbkcolor(WHITE);
+	cleardevice();
+	//输出图片
+	IMAGE img1;//定义一个(变量)对象
+	IMAGE img2;//定义一个(变量)对象
+	loadimage(&img1, "C:\\Users\\殒hu\\Desktop\\江科大地图 .jpg", 1200, 705);//绝对路径
+	putimage(0, 0, &img1);
+	getchar();
+	//输出路径
+	int start;
+	int end;
+	cout << "请输入您的起点(1-12)：" << endl;
+	cin >> start;
+	cout << "请输入您的终点(1-12)：" << endl;
+	cin >> end;
+	closegraph();
+	if (start < 1||end>12)
+	{
+		cout << "无效输入" << endl;
+		return;
+	}
+	cout << "目的地基本信息：" << endl;
+	cout << "名称：" << vertex[end - 1].name << '\t' << "代号：" << vertex[end - 1].id << '\n' << "简介：" << vertex[end - 1].introduction << '\n'<<endl;
+	cout <<"全长"<<A[start-1][end-1]<<"m"<<'\n' << "最短路径：" << endl;
+	while (start != end) {
+		cout << vertex[end-1].name << "<--";
+		end = P[start-1][end-1];
+	}
+	cout << vertex[start-1].name << '\n' << endl;
+}
+
+//赛事系统
+class System {          
+private:
+	Manage_informatiom manager;
+	Call_System caller;
+	Guide guide;
+	Team* root=NULL;
+	vector<vector<string>>v_team; //所有的txt参赛信息
+public:
+	void init();           //读取文件存入容器
+	void bitree();         //建立排序二叉树
+	void select_funtion();
+	System();
+	Manage_informatiom getManager() {
+		return manager;
+	}
+};
+System::System() {
+	init();
+	bitree();
+}
+void System::select_funtion() {
+	bool flag = true;             //辅助判断输入是否有效
+	int chance;
+	while (flag) {
+		cout << "输入您要进行的操作：（1：信息管理系统 2：叫号系统 3：校园导游 88:退出系统）" << endl;
+		cin >> chance;
+		switch (chance)
+		{
+		//信息管理系统
+		case 1:
+		{
+			int select;
+			cout << endl;
+			cout << "欢迎来到信息管理系统" << endl;
+			int flag2 = true;
+			while (flag2) {
+				cout << "请输入您要进行的操作：（1、添加参赛队伍 2：删除参赛队伍 3：修改参赛队伍信息 4：查看队伍基本信息 5：查看某一学校的所有参赛团队 88:退出信息管理系统）" << endl;
+				cin >> select;
+				switch (select) {
+				case 1:
+				{    
+					cout << endl;
+					//添加参赛队伍
+					Team* p = new Team;
+					cout << "请输入您要添加的队伍的编号：" << endl;
+					cin >> p->id_team;
+					cout << "参赛作品名称：" << endl;
+					cin >> p->name_creation;
+					cout << "参赛学校：" << endl;
+					cin >> p->school;
+					cout << "参赛类别：" << endl;
+					cin >> p->category;
+					cout << "参赛者：" << endl;
+					cin >> p->competitor;
+					cout << "指导老师：" << endl;
+					cin >> p->tutor;
+					manager.add(root, p);
+					//manager.show_allteam(root);
+					break;
+				}
+				//删除参赛队伍
+				case 2: {
+					cout << endl;
+					string id;
+					cout << "请输入您要删除的队伍的编号：" << endl;
+					cin >> id;
+					manager.del(root, id);
+					break;
+
+				}
+					  //修改参赛队伍信息
+				case 3: {
+					string id;
+					cout << endl;
+					cout << "请输入您要修改的队伍的编号：" << endl;
+					cin >> id;
+					cout << endl;
+					//manager.show_information(root, id);
+					//cout << endl;
+					manager.change(root, id);
+					break;
+				}
+					  //查看队伍基本信息
+				case 4: {
+					cout << endl;
+					string id;
+					cout << "请输入您要查看的队伍的编号：" << endl;
+					cin >> id;
+					cout << endl;
+					manager.show_information(root, id);
+					cout << endl;
+					break;
+				}
+					  //查看某一学校的所有参赛团队
+				case 5: {
+					string school;
+					cout << endl;
+					cout << "请输入您要查看的学校：" << endl;
+					cin >> school;
+					cout << endl;
+					//将同一学校的所有参赛者存在一起
+					manager.search_school(root, school);
+					Team* q[1000]={};
+					int select;
+					cout << endl;
+					cout << "请选择排序方式（1、按赛事类别 2、按编号）" << endl;
+					cin >> select;
+					cout << endl;
+					//归并排序
+					if(select==1)
+					manager.MergeSort(manager.team_same_school, q, 0, manager.num_same_school-1);
+					if (manager.num_same_school == 0)
+						cout <<'\n'<< "查找失败" << endl;
+					else
+					for (int i = 0; i < manager.num_same_school; i++) {
+						cout << manager.team_same_school[i]->id_team << "   " << manager.team_same_school[i]->name_creation << "    " << manager.team_same_school [i]->school<<"    " << manager.team_same_school[i]->category << " " << manager.team_same_school[i]->competitor << "    " << manager.team_same_school[i]->tutor << endl;
+					}
+					manager.num_same_school = 0;
+					cout << endl;
+					break;
+				}
+				case 88: {
+					flag2 = false;
+					break;
+				}
+				default:
+					cout << "无效输入" << endl;
+				}
+			}
+			manager.write(root);
+			break;
+		}
+		//叫号系统
+		case 2: 
+			cout << endl;
+			caller.call(root);
+			break;
+		//校园导游
+		case 3:                 
+			cout << endl;
+			guide.guidance();
+			break;
+		//退出系统
+		case 88:
+			flag = false;
+			break;
+		default:
+			cout << "无效数字，请重新输入：" << endl;
+		}
+	}
+}
+void System::init() {
+	string line;
+	ifstream fin;
+	fin.open("C:/Users/殒hu/Desktop/数据结构课设/team.txt");
+	while (fin)
+	{
+		string s;
+		int count = 0;
+		if (!getline(fin, s)) break;
+		istringstream ss(s);
+		vector <string> record;
+		while (ss)
+		{
+			string s;
+			ss >> s;
+			
+			if(s != "#")
+			record.push_back(s);
+		}
+		v_team.push_back(record);
+	}
+}
+void System::bitree(){
+	for (int i = 1; i < v_team.size(); i++) {
+		Team* p = new Team;
+
+		//给team初始化
+		p->id_team = v_team[i][0];
+		p->name_creation = v_team[i][1];
+		p->school = v_team[i][2];
+		p->category = v_team[i][3];
+		p->competitor = v_team[i][4];
+		p->tutor = v_team[i][5];
+
+		//建立二叉排序树
+		root = manager.add(root, p);
+	}
+	//cout<<manager.num_team(root);
+	//manager.show_allteam(root);
+	//cout<<root->left->id_team;
+}
+
+
+void main() {
+	System system;
+	system.select_funtion();
+}
