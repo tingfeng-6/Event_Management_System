@@ -48,13 +48,41 @@ private:
         	Manage_informatiom manager;
           
 使用init()方法实现从txt读入数据将其用二叉排序树存储起来
-void init();           //读取文件存入容器
+void init()           //读取文件存入容器
+{
+按行读入txt
+按#分参赛信息
+存入容器
+}
 
 使用bitree（）实现二叉树的建立
-void bitree();         //建立排序二叉树
+void bitree()         //建立排序二叉树
+{
+遍历容器，编号大于则与右孩子比较
+小于则与左孩子比较
+添加队伍
+}
 
 使用select_function()实现各个功能的选择
-void select_funtion();
+void select_funtion()
+{
+while(输入有效){
+switch(选择){
+case 1:信息管理{
+	switch（选择）
+	case1：添加队伍
+	case2：删除队伍
+	case3：修改队伍
+	case4：查看队伍信息
+	case5：查看某一学校的所有队伍
+	case88：退出系统
+	}
+case2：叫号系统
+case3：校园导游
+case88：退出系统
+	  }
+	 }
+}
 
 
 定义一个信息管理类Manage_information ,
@@ -63,10 +91,20 @@ class Manage_informatiom
 定义一系列功能函数
 
  //比较编号大小
-bool cmp(string x1, string x2); 
+bool cmp(string x1, string x2)
+{
+x1大于x2，返回true
+小于返回false
+}
 
 使用search_id函数实现基于id的查找
-Team* search_id(Team *r,string id);  
+Team* search_id(Team *r,string id){
+r不为NULL{
+r.team_id与id比较
+大于则调用（search_id(r.right,id)）；
+小于则调用(search_id(r.left,id))；
+	}
+} 
 
 使用search_school函数实现基于学校的查找，并输出按赛事类别排序的结果
 void search_school(Team* r, string school);
